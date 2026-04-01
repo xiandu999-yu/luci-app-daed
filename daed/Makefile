@@ -116,7 +116,7 @@ define Build/Prepare
 		pushd $(PKG_BUILD_DIR) ; \
 			wget -qO - https://github.com/QiuSimons/luci-app-daed/raw/refs/heads/kix/patchset/build_fixes.patch | patch -p1 ; \
 			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/2f9b44aedcd9394641db8a8ba96377ecaa5c06bc.patch | patch -p1 ; \
-			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/1f8d9ad56d44152911331ac7e8d44c26545e9f65.patch | patch -p1 ; \
+			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/715696842e7ed370fb101eaa5108b16a42faeace.patch | patch -p1 ; \
 			go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
 			go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
 			go get -u=patch ; \
