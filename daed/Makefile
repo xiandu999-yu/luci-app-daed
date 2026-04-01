@@ -95,45 +95,48 @@ NODE_URL:=https://nodejs.org/dist/$(NODE_VERSION)/$(NODE_DIST).tar.xz
 
 define Build/Prepare
 	( \
-		$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR)/../ -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
-		rm -rf $(PKG_BUILD_DIR) && git clone https://github.com/daeuniverse/dae-wing $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing && git -C $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing checkout $(WING_HASH_SHORT) ; \
-		rm -rf $(PKG_BUILD_DIR)/dae-core && git clone https://github.com/olicesx/dae $(PKG_BUILD_DIR)/dae-core && git -C $(PKG_BUILD_DIR)/dae-core checkout $(CORE_HASH_SHORT) ; \
-		pushd $(PKG_BUILD_DIR)/dae-core ; \
-		git submodule update --init ; \
-        go get -u=patch ; \
-		go mod tidy ; \
-		popd ; \
-        rm -rf $(PKG_BUILD_DIR)/../outbound ; \
+		rm -rf $(PKG_BUILD_DIR) ; \
+		mkdir -p $(PKG_BUILD_DIR) ; \
+		$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
+		git clone https://github.com/daeuniverse/dae-wing $(PKG_BUILD_DIR)/wing && \
+			git -C $(PKG_BUILD_DIR)/wing checkout $(WING_HASH_SHORT) ; \
+		rm -rf $(PKG_BUILD_DIR)/dae-core ; \
+		git clone https://github.com/olicesx/dae $(PKG_BUILD_DIR)/dae-core && \
+			git -C $(PKG_BUILD_DIR)/dae-core checkout $(CORE_HASH_SHORT) ; \
+		rm -rf $(PKG_BUILD_DIR)/../outbound ; \
 		git clone --depth=1 -b perf/complete-optimizations https://github.com/olicesx/outbound.git $(PKG_BUILD_DIR)/../outbound ; \
-		pushd $(PKG_BUILD_DIR) ; \
-		go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
 		rm -rf $(PKG_BUILD_DIR)/../quic-go ; \
 		git clone --depth=1 -b main https://github.com/olicesx/quic-go.git $(PKG_BUILD_DIR)/../quic-go ; \
-		pushd $(PKG_BUILD_DIR) ; \
-		go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
-		go get -u=patch ; \
-		go mod tidy ; \
+		pushd $(PKG_BUILD_DIR)/dae-core ; \
+			git submodule update --init ; \
+			go get -u=patch ; \
+			go mod tidy ; \
 		popd ; \
-		mkdir -p $(PKG_BUILD_DIR)/.node_tmp ; \
+		pushd $(PKG_BUILD_DIR) ; \
+			wget -qO - https://github.com/QiuSimons/luci-app-daed/raw/refs/heads/kix/patchset/build_fixes.patch | patch -p1 ; \
+			go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
+			go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
+			go get -u=patch ; \
+			go mod tidy ; \
+		popd ; \
 		mkdir -p $(PKG_BUILD_DIR)/.node_tmp/config ; \
 		wget -qO - "$(NODE_URL)" | tar -xJ -C $(PKG_BUILD_DIR)/.node_tmp --strip-components=1 ; \
 		export PATH="$(PKG_BUILD_DIR)/.node_tmp/bin:$$$$PATH" ; \
 		export XDG_CONFIG_HOME="$(PKG_BUILD_DIR)/.node_tmp/config" ; \
 		npm install -g pnpm ; \
-		pushd $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION) ; \
-		pnpm install ; \
-		pnpm build --filter daed ; \
+		pushd $(PKG_BUILD_DIR) ; \
+			pnpm install ; \
+			pnpm build --filter daed ; \
 		popd ; \
 		mkdir -p $(PKG_BUILD_DIR)/webrender/web ; \
-		cp -rf $(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
-		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff"  ! -name "*.woff2" -exec sh -c '\
-			gzip -9 -k "{}"; \
-			if [ "$$$$(stat -c %s {})" -lt "$$$$(stat -c %s {}.gz)" ]; then \
-				rm {}.gz; \
+		cp -rf $(PKG_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
+		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff" ! -name "*.woff2" -exec sh -c '\
+			gzip -9 -k "$$1"; \
+			if [ "$$$$(stat -c %s "$$1")" -lt "$$$$(stat -c %s "$$1.gz")" ]; then \
+				rm "$$1.gz"; \
 			else \
-				rm {}; \
-			fi' \
-		";" ; \
+				rm "$$1"; \
+			fi' sh {} ";" ; \
 		rm -rf $(PKG_BUILD_DIR)/.node_tmp ; \
 	)
 endef
