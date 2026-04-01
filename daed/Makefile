@@ -6,7 +6,7 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=daed
 PKG_VERSION:=2026.04.01
-DAED_VERSION:=daed-46dfb62
+DAED_VERSION:=daed-1c45f45
 WING_VERSION:=wing-6bb6a31
 CORE_VERSION:=core-51eca94
 WING_HASH_SHORT:=$(shell echo $(WING_VERSION) | cut -d- -f2)
@@ -65,8 +65,7 @@ define Package/daed
   DEPENDS:=$(GO_ARCH_DEPENDS) \
     +ca-bundle +kmod-sched-core +kmod-sched-bpf \
     +kmod-veth +v2ray-geoip +v2ray-geosite \
-    +@KERNEL_XDP_SOCKETS \
-    +DAED_USE_VMLINUX_BTF:vmlinux-btf
+    +@KERNEL_XDP_SOCKETS
 endef
 
 define Package/daed/config
@@ -78,9 +77,6 @@ define Package/daed/config
 	config DAED_USE_KERNEL_BTF
 		bool "Use kernel BTF (integrated)"
 		depends on KERNEL_DEBUG_INFO_BTF
-
-	config DAED_USE_VMLINUX_BTF
-		bool "Use vmlinux-btf package"
 	endchoice
 endef
 
@@ -119,6 +115,7 @@ define Build/Prepare
 		popd ; \
 		pushd $(PKG_BUILD_DIR) ; \
 			wget -qO - https://github.com/QiuSimons/luci-app-daed/raw/refs/heads/kix/patchset/build_fixes.patch | patch -p1 ; \
+			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/09694d45126a112e2e16e3939c9c29e54cb57649.patch | patch -p1 ; \
 			go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
 			go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
 			go get -u=patch ; \
