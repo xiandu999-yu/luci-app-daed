@@ -128,7 +128,7 @@ jobs:
             base="$(basename "$f")"
             ext="${base##*.}"
             name="${base%.*}"
-            cp "$f" "dist/${name}-${{ matrix.arch }}-${{ matrix.sdk }}.${ext}"
+            cp "$f" "dist/${name}-${{ matrix.sdk }}.${ext}"
           done
           ls -lah dist
 
