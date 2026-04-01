@@ -8,7 +8,7 @@ PKG_NAME:=daed
 PKG_VERSION:=2026.04.01
 DAED_VERSION:=daed-1c45f45
 WING_VERSION:=wing-6bb6a31
-CORE_VERSION:=core-51eca94
+CORE_VERSION:=core-989e5e5
 WING_HASH_SHORT:=$(shell echo $(WING_VERSION) | cut -d- -f2)
 CORE_HASH_SHORT:=$(shell echo $(CORE_VERSION) | cut -d- -f2)
 PKG_RELEASE:=1
@@ -116,7 +116,6 @@ define Build/Prepare
 		pushd $(PKG_BUILD_DIR) ; \
 			wget -qO - https://github.com/QiuSimons/luci-app-daed/raw/refs/heads/kix/patchset/build_fixes.patch | patch -p1 ; \
 			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/2f9b44aedcd9394641db8a8ba96377ecaa5c06bc.patch | patch -p1 ; \
-			wget -qO - https://github.com/xiandu999-yu/dae-wing/commit/715696842e7ed370fb101eaa5108b16a42faeace.patch | patch -p1 ; \
 			go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
 			go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
 			go get -u=patch ; \
