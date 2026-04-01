@@ -130,13 +130,14 @@ define Build/Prepare
 		popd ; \
 		mkdir -p $(PKG_BUILD_DIR)/webrender/web ; \
 		cp -rf $(PKG_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
-		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff" ! -name "*.woff2" -exec sh -c '\
-			gzip -9 -k "$$1"; \
-			if [ "$$$$(stat -c %s "$$1")" -lt "$$$$(stat -c %s "$$1.gz")" ]; then \
-				rm "$$1.gz"; \
+		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff"  ! -name "*.woff2" -exec sh -c '\
+			gzip -9 -k "{}"; \
+			if [ "$$$$(stat -c %s {})" -lt "$$$$(stat -c %s {}.gz)" ]; then \
+				rm {}.gz; \
 			else \
-				rm "$$1"; \
-			fi' sh {} ";" ; \
+				rm {}; \
+			fi' \
+		";" ; \
 		rm -rf $(PKG_BUILD_DIR)/.node_tmp ; \
 	)
 endef
@@ -155,7 +156,7 @@ define Build/Compile
 		$(GO_PKG_BUILD_CONFIG_VARS) \
 		$(GO_PKG_BUILD_VARS) ; \
 		go generate ./... ; \
-		pushd dae-core ; \
+		cd dae-core ; \
 		export \
 		BPF_CLANG="$(CLANG)" \
 		BPF_STRIP_FLAG="-strip=$(LLVM_STRIP)" \
@@ -164,9 +165,6 @@ define Build/Compile
 		BPF_TRACE_TARGET="$(GO_ARCH)" ; \
 		go generate control/control.go ; \
 		go generate trace/trace.go ; \
-		go mod tidy ; \
-		popd ; \
-		go mod tidy ; \
 		popd ; \
 		$(call GoPackage/Build/Compile) ; \
 	)
