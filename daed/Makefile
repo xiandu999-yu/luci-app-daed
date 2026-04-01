@@ -23,7 +23,9 @@ PKG_LICENSE:=AGPL-3.0-only MIT
 PKG_LICENSE_FILES:=LICENSE wing/LICENSE
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
-PKG_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)/wing
+DAED_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DIR=$(DAED_BUILD_DIR)/wing
+
 PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
@@ -90,23 +92,21 @@ endef
 NODE_VERSION:=v24.12.0
 NODE_DIST:=node-$(NODE_VERSION)-linux-x64
 NODE_URL:=https://nodejs.org/dist/$(NODE_VERSION)/$(NODE_DIST).tar.xz
-# NODE_DIST:=node-$(NODE_VERSION)-linux-x64-musl
-# NODE_URL:=https://unofficial-builds.nodejs.org/download/release/$(NODE_VERSION)/$(NODE_DIST).tar.xz
 
 define Build/Prepare
 	( \
-		rm -rf $(PKG_BUILD_DIR) ; \
-		mkdir -p $(PKG_BUILD_DIR) ; \
-		$(TAR) --strip-components=1 -C $(PKG_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
-		git clone https://github.com/daeuniverse/dae-wing $(PKG_BUILD_DIR)/wing && \
-			git -C $(PKG_BUILD_DIR)/wing checkout $(WING_HASH_SHORT) ; \
+		rm -rf $(DAED_BUILD_DIR) ; \
+		mkdir -p $(DAED_BUILD_DIR) ; \
+		$(TAR) --strip-components=1 -C $(DAED_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
+		git clone https://github.com/daeuniverse/dae-wing $(PKG_BUILD_DIR) && \
+			git -C $(PKG_BUILD_DIR) checkout $(WING_HASH_SHORT) ; \
 		rm -rf $(PKG_BUILD_DIR)/dae-core ; \
 		git clone https://github.com/olicesx/dae $(PKG_BUILD_DIR)/dae-core && \
 			git -C $(PKG_BUILD_DIR)/dae-core checkout $(CORE_HASH_SHORT) ; \
-		rm -rf $(PKG_BUILD_DIR)/../outbound ; \
-		git clone --depth=1 -b perf/complete-optimizations https://github.com/olicesx/outbound.git $(PKG_BUILD_DIR)/../outbound ; \
-		rm -rf $(PKG_BUILD_DIR)/../quic-go ; \
-		git clone --depth=1 -b main https://github.com/olicesx/quic-go.git $(PKG_BUILD_DIR)/../quic-go ; \
+		rm -rf $(DAED_BUILD_DIR)/outbound ; \
+		git clone --depth=1 -b perf/complete-optimizations https://github.com/olicesx/outbound.git $(DAED_BUILD_DIR)/outbound ; \
+		rm -rf $(DAED_BUILD_DIR)/quic-go ; \
+		git clone --depth=1 -b main https://github.com/olicesx/quic-go.git $(DAED_BUILD_DIR)/quic-go ; \
 		pushd $(PKG_BUILD_DIR)/dae-core ; \
 			git submodule update --init ; \
 			go get -u=patch ; \
@@ -119,17 +119,17 @@ define Build/Prepare
 			go get -u=patch ; \
 			go mod tidy ; \
 		popd ; \
-		mkdir -p $(PKG_BUILD_DIR)/.node_tmp/config ; \
-		wget -qO - "$(NODE_URL)" | tar -xJ -C $(PKG_BUILD_DIR)/.node_tmp --strip-components=1 ; \
-		export PATH="$(PKG_BUILD_DIR)/.node_tmp/bin:$$$$PATH" ; \
-		export XDG_CONFIG_HOME="$(PKG_BUILD_DIR)/.node_tmp/config" ; \
+		mkdir -p $(DAED_BUILD_DIR)/.node_tmp/config ; \
+		wget -qO - "$(NODE_URL)" | tar -xJ -C $(DAED_BUILD_DIR)/.node_tmp --strip-components=1 ; \
+		export PATH="$(DAED_BUILD_DIR)/.node_tmp/bin:$$$$PATH" ; \
+		export XDG_CONFIG_HOME="$(DAED_BUILD_DIR)/.node_tmp/config" ; \
 		npm install -g pnpm ; \
-		pushd $(PKG_BUILD_DIR) ; \
+		pushd $(DAED_BUILD_DIR) ; \
 			pnpm install ; \
 			pnpm build --filter daed ; \
 		popd ; \
 		mkdir -p $(PKG_BUILD_DIR)/webrender/web ; \
-		cp -rf $(PKG_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
+		cp -rf $(DAED_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
 		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff"  ! -name "*.woff2" -exec sh -c '\
 			gzip -9 -k "{}"; \
 			if [ "$$$$(stat -c %s {})" -lt "$$$$(stat -c %s {}.gz)" ]; then \
@@ -138,7 +138,7 @@ define Build/Prepare
 				rm {}; \
 			fi' \
 		";" ; \
-		rm -rf $(PKG_BUILD_DIR)/.node_tmp ; \
+		rm -rf $(DAED_BUILD_DIR)/.node_tmp ; \
 	)
 endef
 
