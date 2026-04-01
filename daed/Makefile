@@ -169,11 +169,11 @@ define Build/Compile
 		BPF_CFLAGS="$(DAE_CFLAGS)" \
 		BPF_TARGET="bpfel,bpfeb" \
 		BPF_TRACE_TARGET="$(GO_ARCH)" ; \
-		go generate control/control.go ; \
-		go generate trace/trace.go ; \
+		go generate ./control/control.go ; \
+		go generate ./trace/trace.go ; \
 		popd ; \
-		$(call GoPackage/Build/Compile) ; \
 	)
+	$(call GoPackage/Build/Compile)
 endef
 
 define Package/daed/install
