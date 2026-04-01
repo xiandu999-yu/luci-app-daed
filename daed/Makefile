@@ -23,17 +23,20 @@ PKG_LICENSE:=AGPL-3.0-only MIT
 PKG_LICENSE_FILES:=LICENSE wing/LICENSE
 PKG_MAINTAINER:=Tianling Shen <cnsztl@immortalwrt.org>
 
-DAED_BUILD_DIR=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
-PKG_BUILD_DIR=$(DAED_BUILD_DIR)/wing
+DAED_BUILD_DIR:=$(BUILD_DIR)/$(PKG_NAME)-$(PKG_VERSION)
+PKG_BUILD_DIR:=$(DAED_BUILD_DIR)/wing
 
 PKG_BUILD_DEPENDS:=golang/host bpf-headers
 PKG_BUILD_PARALLEL:=1
 PKG_BUILD_FLAGS:=no-mips16
 
 GO_PKG:=github.com/daeuniverse/dae-wing
+
 GO_PKG_LDFLAGS:= \
-	-s -w -X '$(GO_PKG)/db.AppDescription=$(PKG_NAME) is a integration solution of dae, API and UI.'
-GO_PKG_LDFLAGS_X= \
+	-s -w -buildid= \
+	-linkmode external -extldflags '-static -Wl,-s' \
+	-X '$(GO_PKG)/db.AppDescription=$(PKG_NAME) is a integration solution of dae, API and UI.'
+GO_PKG_LDFLAGS_X:= \
 	$(GO_PKG)/db.AppName=$(PKG_NAME) \
 	$(GO_PKG)/db.AppVersion=$(DAED_VERSION)_$(WING_VERSION)_$(CORE_VERSION)
 GO_PKG_TAGS:=embedallowed,trace
@@ -42,10 +45,12 @@ include $(INCLUDE_DIR)/package.mk
 include $(INCLUDE_DIR)/bpf.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
+GO_PKG_BUILD_VARS+= \
+	GOFLAGS="-trimpath -buildvcs=false"
+
 GO_PKG_TARGET_VARS+= \
-	CGO_LDFLAGS="$(TARGET_LDFLAGS) -static" \
+	CGO_LDFLAGS="$(TARGET_LDFLAGS) -static -Wl,-s" \
 	GOEXPERIMENT=newinliner,simd
-GO_PKG_DEFAULT_LDFLAGS:=-w -s -linkmode external -extldflags '-static'
 
 define Package/daed/Default
   SECTION:=net
@@ -130,6 +135,7 @@ define Build/Prepare
 		popd ; \
 		mkdir -p $(PKG_BUILD_DIR)/webrender/web ; \
 		cp -rf $(DAED_BUILD_DIR)/apps/web/dist/* $(PKG_BUILD_DIR)/webrender/web ; \
+		find $(PKG_BUILD_DIR)/webrender/web -name "*.map" -type f -delete ; \
 		find $(PKG_BUILD_DIR)/webrender/web -type f -size +4k ! -name "*.gz" ! -name "*.woff"  ! -name "*.woff2" -exec sh -c '\
 			gzip -9 -k "{}"; \
 			if [ "$$$$(stat -c %s {})" -lt "$$$$(stat -c %s {}.gz)" ]; then \
