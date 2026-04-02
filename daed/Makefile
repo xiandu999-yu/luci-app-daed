@@ -118,7 +118,6 @@ define Build/Prepare
 			go mod tidy ; \
 		popd ; \
 		pushd $(PKG_BUILD_DIR) ; \
-			wget -qO - https://github.com/QiuSimons/luci-app-daed/raw/refs/heads/kix/patchset/build_fixes.patch | patch -p1 ; \
 			go mod edit -replace github.com/daeuniverse/outbound=../outbound ; \
 			go mod edit -replace github.com/daeuniverse/quic-go=../quic-go ; \
 			go get -u=patch ; \
