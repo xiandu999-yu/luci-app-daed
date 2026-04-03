@@ -8,7 +8,7 @@ PKG_NAME:=daed
 PKG_VERSION:=2026.04.03
 DAED_VERSION:=daed-1c45f45
 WING_VERSION:=wing-6bb6a31
-CORE_VERSION:=core-882ebb7
+CORE_VERSION:=core-d4d9c51
 WING_HASH_SHORT:=$(shell echo $(WING_VERSION) | cut -d- -f2)
 CORE_HASH_SHORT:=$(shell echo $(CORE_VERSION) | cut -d- -f2)
 PKG_RELEASE:=1
@@ -106,7 +106,7 @@ define Build/Prepare
 		git clone https://github.com/daeuniverse/dae-wing $(PKG_BUILD_DIR) && \
 			git -C $(PKG_BUILD_DIR) checkout $(WING_HASH_SHORT) ; \
 		rm -rf $(PKG_BUILD_DIR)/dae-core ; \
-		git clone https://github.com/xiandu999-yu/dae $(PKG_BUILD_DIR)/dae-core && \
+		git clone https://github.com/olicesx/dae $(PKG_BUILD_DIR)/dae-core && \
 			git -C $(PKG_BUILD_DIR)/dae-core checkout $(CORE_HASH_SHORT) ; \
 		rm -rf $(DAED_BUILD_DIR)/outbound ; \
 		git clone --depth=1 -b perf/complete-optimizations https://github.com/olicesx/outbound.git $(DAED_BUILD_DIR)/outbound ; \
