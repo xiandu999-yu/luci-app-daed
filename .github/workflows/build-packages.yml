@@ -166,13 +166,14 @@ jobs:
           echo "======================"
 
       - name: Create or update GitHub release
-        uses: ncipollo/release-action@v1
+        uses: softprops/action-gh-release@v2
         with:
-          tag: ${{ needs.prepare.outputs.release_tag }}
+          tag_name: ${{ needs.prepare.outputs.release_tag }}
           name: ${{ needs.prepare.outputs.release_name }}
-          allowUpdates: true
-          replacesArtifacts: true
-          generateReleaseNotes: true
+          files: |
+            release-assets/**/*.ipk
+            release-assets/**/*.apk
+          generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit: ${{ github.sha }}
-          artifacts: "release-assets/**/*.ipk,release-assets/**/*.apk"
+          target_commitish: ${{ github.sha }}
+
