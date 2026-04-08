@@ -131,7 +131,13 @@ jobs:
             base="$(basename "$f")"
             ext="${base##*.}"
             name="${base%.*}"
-            new_name="${name}-${{ matrix.arch }}-${{ matrix.sdk }}.${ext}"
+
+            # Avoid duplicating architecture in name, and skip architecture suffix for LuCI/all packages
+            if [[ "$name" == *"${{ matrix.arch }}"* ]] || [[ "$name" == *"all"* ]] || [[ "$name" == luci-* ]]; then
+              new_name="${name}-${{ matrix.sdk }}.${ext}"
+            else
+              new_name="${name}-${{ matrix.arch }}-${{ matrix.sdk }}.${ext}"
+            fi
             
             cp "$f" "dist/${new_name}"
           done
@@ -157,21 +163,21 @@ jobs:
         with:
           path: release-assets
 
-      - name: Show release assets
+      - name: Consolidate and de-duplicate assets
         shell: bash
         run: |
-          echo "=== Release assets ==="
-          find release-assets -type f | sort
-          echo "======================"
+          mkdir -p release-dist
+          # Copy all assets to a flat directory. Identical files (like LuCI _all.ipk) 
+          # from different matrix jobs will naturally overwrite each other.
+          find release-assets -type f -exec cp -v {} release-dist/ \;
+          ls -lah release-dist
 
       - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.release_tag }}
           name: ${{ needs.prepare.outputs.release_name }}
-          files: |
-            release-assets/**/*.ipk
-            release-assets/**/*.apk
+          files: release-dist/*
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
           target_commitish: ${{ github.sha }}
