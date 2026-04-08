@@ -9,9 +9,6 @@ on:
 permissions:
   contents: write
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-
 jobs:
   prepare:
     name: Prepare version
@@ -144,7 +141,7 @@ jobs:
           ls -lah dist
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.arch }}-${{ matrix.sdk }}-${{ matrix.pkg_ext }}
           path: dist/*.${{ matrix.pkg_ext }}
@@ -159,7 +156,7 @@ jobs:
       - build
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           path: release-assets
 
