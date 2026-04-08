@@ -6,8 +6,6 @@ on:
     branches:
       - kix
 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 permissions:
   contents: write
@@ -22,7 +20,7 @@ jobs:
       release_name: ${{ steps.meta.outputs.release_name }}
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -73,27 +71,17 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Get node-empty
-        run: |
-          git clone https://github.com/sbwml/node-empty
 
       - name: Init build dependencies
         env:
           DEBIAN_FRONTEND: noninteractive
         shell: bash
         run: |
-          sudo swapoff -a || true
-          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           sudo -E apt-get update
-          sudo -E apt-get install -y clang llvm npm curl jq
-          sudo npm install -g pnpm
-          sudo npm install -g n
-          sudo npm install -g taze
-          sudo n stable
+          sudo -E apt-get install -y clang llvm curl jq
 
       - name: Build packages
         uses: sbwml/openwrt-gh-action-sdk@go1.26
@@ -111,16 +99,6 @@ jobs:
           find bin/packages -type f | grep -E '\.(ipk|apk)$' || true
           echo "==========================="
 
-      - name: Verify expected package format exists
-        shell: bash
-        run: |
-          shopt -s nullglob
-          files=(bin/packages/${{ matrix.arch }}/packages_ci/*.${{ matrix.pkg_ext }})
-          if [ ${#files[@]} -eq 0 ]; then
-            echo "No .${{ matrix.pkg_ext }} files found in bin/packages/${{ matrix.arch }}/packages_ci/"
-            exit 1
-          fi
-          printf '%s\n' "${files[@]}"
 
       - name: Prepare renamed artifacts
         shell: bash
@@ -144,7 +122,7 @@ jobs:
           ls -lah dist
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v7
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.arch }}-${{ matrix.sdk }}-${{ matrix.pkg_ext }}
           path: dist/*.${{ matrix.pkg_ext }}
@@ -159,18 +137,10 @@ jobs:
       - build
     steps:
       - name: Download all build artifacts
-        uses: actions/download-artifact@v8
+        uses: actions/download-artifact@v4
         with:
-          path: release-assets
-
-      - name: Consolidate and de-duplicate assets
-        shell: bash
-        run: |
-          mkdir -p release-dist
-          # Copy all assets to a flat directory. Identical files (like LuCI _all.ipk) 
-          # from different matrix jobs will naturally overwrite each other.
-          find release-assets -type f -exec cp -v {} release-dist/ \;
-          ls -lah release-dist
+          path: release-dist
+          merge-multiple: true
 
       - name: Create or update GitHub release
         uses: softprops/action-gh-release@v2
@@ -181,4 +151,28 @@ jobs:
           generate_release_notes: true
           token: ${{ secrets.GITHUB_TOKEN }}
           target_commitish: ${{ github.sha }}
+
+      - name: Delete Older Releases
+        uses: dev-drprasad/delete-older-releases@master
+        with:
+          keep_latest: 3
+          delete_tags: true
+        env:
+          GITHUB_TOKEN: ${{secrets.ACTIONS_DEPLOY_KEY}}
+        continue-on-error: true
+
+      - name: Cleanup Old Action Artifacts
+        uses: c-hive/gha-remove-artifacts@master
+        with:
+          age: '3 days'
+          skip-recent: 3
+        continue-on-error: true
+
+      - name: Cleanup Workflow Logs
+        uses: Mattraks/delete-workflow-runs@main
+        with:
+          token: ${{secrets.ACTIONS_DEPLOY_KEY}}
+          repository: ${{ github.repository }}
+          retain_days: 3
+        continue-on-error: true
 
