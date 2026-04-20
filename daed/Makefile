@@ -113,12 +113,6 @@ define Build/Prepare
 		rm -rf $(DAED_BUILD_DIR)/quic-go ; \
 		git clone --depth=1 -b main https://github.com/olicesx/quic-go.git $(DAED_BUILD_DIR)/quic-go ; \
 		pushd $(PKG_BUILD_DIR)/dae-core ; \
-			wget -qO - https://github.com/ksong008/dae/commit/1e58c59.patch | patch -p1 ; \
-			wget -qO - https://github.com/ksong008/dae/commit/c08dc80.patch | patch -p1 ; \
-			wget -qO - https://github.com/ksong008/dae/commit/ccd4eef.patch | patch -p1 ; \
-			wget -qO - https://github.com/ksong008/dae/commit/73515f7.patch | patch -p1 ; \
-			wget -qO - https://github.com/ksong008/dae/commit/5463328.patch | patch -p1 ; \
-			wget -qO - https://github.com/ksong008/dae/commit/d0367cb.patch | patch -p1 ; \
 			git submodule update --init ; \
 			go get -u=patch ; \
 			go mod tidy ; \
