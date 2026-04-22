@@ -16,7 +16,7 @@ PKG_RELEASE:=1
 PKG_SOURCE:=$(PKG_NAME)-$(PKG_VERSION).tar.gz
 PKG_SOURCE_PROTO:=git
 PKG_SOURCE_VERSION:=9f051d30104e76053f68811204febf6e9cbf1b60
-PKG_SOURCE_URL:=https://github.com/ksong008/daed.git
+PKG_SOURCE_URL:=https://github.com/daeuniverse/daed.git
 PKG_MIRROR_HASH:=skip
 
 PKG_LICENSE:=AGPL-3.0-only MIT
@@ -103,7 +103,7 @@ define Build/Prepare
 		rm -rf $(DAED_BUILD_DIR) ; \
 		mkdir -p $(DAED_BUILD_DIR) ; \
 		$(TAR) --strip-components=1 -C $(DAED_BUILD_DIR) -xzf $(DL_DIR)/$(PKG_NAME)-$(PKG_VERSION).tar.gz ; \
-		git clone https://github.com/ksong008/dae-wing $(PKG_BUILD_DIR) && \
+		git clone https://github.com/daeuniverse/dae-wing $(PKG_BUILD_DIR) && \
 			git -C $(PKG_BUILD_DIR) checkout $(WING_HASH_SHORT) ; \
 		rm -rf $(PKG_BUILD_DIR)/dae-core ; \
 		git clone https://github.com/olicesx/dae $(PKG_BUILD_DIR)/dae-core && \
